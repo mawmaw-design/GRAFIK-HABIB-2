@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grafik Pembuangan Limbah Dapur Interaktif (SKI 2023)</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Chart.js untuk membuat grafik -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Memuat plugin anotasi untuk Chart.js (untuk garis rata-rata) -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <!-- Memuat Font Retro-Futuristik (Orbitron) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Roboto Mono", monospace;
+        /* Latar belakang gelap dengan grid neon */
+        background-color: #0d0d1a;
+        background-image: linear-gradient(
+            rgba(0, 255, 255, 0.1) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 2rem 2rem;
+      }
+      .title-font {
+        font-family: "Orbitron", sans-serif;
+      }
+      .control-btn {
+        transition: all 0.2s ease-in-out;
+        border: 1px solid #00ffff80;
+      }
+      .control-btn:hover {
+        background-color: #00ffff;
+        color: #0d0d1a;
+        box-shadow: 0 0 15px #00ffff;
+      }
+      .control-btn.active {
+        background-color: #00ffff;
+        color: #0d0d1a;
+        font-weight: 700;
+        box-shadow: 0 0 20px #00ffff, inset 0 0 5px #00ffff;
+      }
+      /* Custom scrollbar style */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #00ffff;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #00b3b3;
+      }
+    </style>
+  </head>
+  <body
+    class="text-cyan-200 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8"
+  >
+    <div
+      class="w-full max-w-7xl bg-black bg-opacity-60 backdrop-blur-sm border-2 border-cyan-400 rounded-2xl shadow-2xl shadow-cyan-500/20 p-4 sm:p-6 lg:p-8"
+    >
+      <!-- Judul Utama -->
+      <div class="text-center mb-4">
+        <h1
+          class="text-2xl sm:text-3xl font-bold text-cyan-300 title-font uppercase tracking-widest"
+        >
+          Analisis Data Limbah Air Dapur
+        </h1>
+        <p class="text-md text-cyan-400 mt-2">
+          Proporsi Pembuangan ke Got/Kali/Sungai (SKI 2023)
+        </p>
+      </div>
+
+      <!-- Kontrol Interaktif -->
+      <div class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-6">
+        <!-- Kontrol Penyortiran -->
+        <div
+          class="flex flex-wrap justify-center items-center gap-2 bg-gray-900 bg-opacity-50 p-2 rounded-lg border border-cyan-600"
+        >
+          <span
+            class="text-sm font-semibold text-cyan-300 self-center mr-2 title-font"
+            >SORT:</span
+          >
+          <button
+            id="sort-desc"
+            class="control-btn active text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Tertinggi
+          </button>
+          <button
+            id="sort-asc"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Terendah
+          </button>
+          <button
+            id="sort-alpha"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Abjad (A-Z)
+          </button>
+        </div>
+        <!-- Kontrol Filter Pulau -->
+        <div
+          class="flex flex-wrap justify-center items-center gap-2 bg-gray-900 bg-opacity-50 p-2 rounded-lg border border-cyan-600"
+        >
+          <span
+            class="text-sm font-semibold text-cyan-300 self-center mr-2 title-font"
+            >FILTER:</span
+          >
+          <button
+            data-filter="Semua"
+            class="control-btn active text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Semua
+          </button>
+          <button
+            data-filter="Sumatra"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Sumatra
+          </button>
+          <button
+            data-filter="Jawa"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Jawa
+          </button>
+          <button
+            data-filter="Kalimantan"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Kalimantan
+          </button>
+          <button
+            data-filter="Sulawesi"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Sulawesi
+          </button>
+          <button
+            data-filter="Nusa Tenggara & Bali"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Bali & NT
+          </button>
+          <button
+            data-filter="Maluku & Papua"
+            class="control-btn text-sm px-3 py-1 bg-gray-800 text-cyan-300 rounded-md"
+          >
+            Maluku & Papua
+          </button>
+        </div>
+      </div>
+
+      <!-- Area untuk menempatkan grafik -->
+      <div class="relative h-[800px]">
+        <canvas id="myBarChart"></canvas>
+      </div>
+
+      <!-- Catatan Kaki -->
+      <div class="text-center mt-6">
+        <p class="text-xs text-cyan-500 opacity-70">
+          SOURCE: Survei Kesehatan Indonesia (SKI) 2023
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // --- 1. PERSIAPAN DATA (SKI 2023) ---
+      const rataRataNasional = 55.8;
+
+      // Data dari gambar SKI 2023, dengan koreksi "SULSEL" menjadi "SUMSEL"
+      const allData = [
+        { provinsi: "Aceh", persentase: 48.9, pulau: "Sumatra" },
+        { provinsi: "Sumatera Utara", persentase: 52.0, pulau: "Sumatra" },
+        { provinsi: "Sumatera Barat", persentase: 49.6, pulau: "Sumatra" },
+        { provinsi: "Riau", persentase: 46.0, pulau: "Sumatra" },
+        { provinsi: "Jambi", persentase: 33.9, pulau: "Sumatra" },
+        { provinsi: "Sumatera Selatan", persentase: 67.3, pulau: "Sumatra" }, // Koreksi dari SULSEL
+        { provinsi: "Bengkulu", persentase: 46.7, pulau: "Sumatra" },
+        { provinsi: "Lampung", persentase: 43.9, pulau: "Sumatra" },
+        { provinsi: "Bangka Belitung", persentase: 35.2, pulau: "Sumatra" },
+        { provinsi: "Kepulauan Riau", persentase: 83.1, pulau: "Sumatra" },
+        { provinsi: "DKI Jakarta", persentase: 78.4, pulau: "Jawa" },
+        { provinsi: "Jawa Barat", persentase: 69.4, pulau: "Jawa" },
+        { provinsi: "Jawa Tengah", persentase: 60.8, pulau: "Jawa" },
+        { provinsi: "D.I. Yogyakarta", persentase: 16.2, pulau: "Jawa" },
+        { provinsi: "Jawa Timur", persentase: 51.3, pulau: "Jawa" },
+        { provinsi: "Banten", persentase: 70.4, pulau: "Jawa" },
+        { provinsi: "Bali", persentase: 41.6, pulau: "Nusa Tenggara & Bali" },
+        {
+          provinsi: "Nusa Tenggara Barat",
+          persentase: 53.4,
+          pulau: "Nusa Tenggara & Bali",
+        },
+        {
+          provinsi: "Nusa Tenggara Timur",
+          persentase: 7.6,
+          pulau: "Nusa Tenggara & Bali",
+        },
+        { provinsi: "Kalimantan Barat", persentase: 46.8, pulau: "Kalimantan" },
+        {
+          provinsi: "Kalimantan Tengah",
+          persentase: 46.0,
+          pulau: "Kalimantan",
+        },
+        {
+          provinsi: "Kalimantan Selatan",
+          persentase: 29.9,
+          pulau: "Kalimantan",
+        },
+        { provinsi: "Kalimantan Timur", persentase: 64.4, pulau: "Kalimantan" },
+        { provinsi: "Kalimantan Utara", persentase: 52.6, pulau: "Kalimantan" },
+        { provinsi: "Sulawesi Utara", persentase: 65.8, pulau: "Sulawesi" },
+        { provinsi: "Sulawesi Tengah", persentase: 41.2, pulau: "Sulawesi" },
+        { provinsi: "Sulawesi Selatan", persentase: 50.3, pulau: "Sulawesi" },
+        { provinsi: "Sulawesi Tenggara", persentase: 32.5, pulau: "Sulawesi" },
+        { provinsi: "Gorontalo", persentase: 38.9, pulau: "Sulawesi" },
+        { provinsi: "Sulawesi Barat", persentase: 51.4, pulau: "Sulawesi" },
+        { provinsi: "Maluku", persentase: 36.0, pulau: "Maluku & Papua" },
+        { provinsi: "Maluku Utara", persentase: 38.9, pulau: "Maluku & Papua" },
+        { provinsi: "Papua Barat", persentase: 37.4, pulau: "Maluku & Papua" },
+        {
+          provinsi: "Papua Barat Daya",
+          persentase: 65.7,
+          pulau: "Maluku & Papua",
+        },
+        { provinsi: "Papua", persentase: 62.6, pulau: "Maluku & Papua" },
+        {
+          provinsi: "Papua Selatan",
+          persentase: 29.3,
+          pulau: "Maluku & Papua",
+        },
+        { provinsi: "Papua Tengah", persentase: 59.5, pulau: "Maluku & Papua" },
+        {
+          provinsi: "Papua Pegunungan",
+          persentase: 39.9,
+          pulau: "Maluku & Papua",
+        },
+      ];
+
+      let currentData = [...allData];
+
+      // --- 2. KONFIGURASI GRAFIK ---
+      const ctx = document.getElementById("myBarChart").getContext("2d");
+      const chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: "Persentase Rumah Tangga (%)",
+              data: [],
+              backgroundColor: "rgba(0, 255, 255, 0.6)",
+              borderColor: "rgba(0, 255, 255, 1)",
+              borderWidth: 1,
+              borderRadius: 2,
+              hoverBackgroundColor: "rgba(0, 255, 255, 1)",
+              hoverBorderColor: "rgba(255, 255, 255, 1)",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: "y",
+          scales: {
+            x: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "PERSENTASE (%)",
+                color: "#00ffff",
+                font: { size: 14, family: "'Orbitron', sans-serif" },
+              },
+              grid: { color: "rgba(0, 255, 255, 0.2)" },
+              ticks: {
+                color: "#9ca3af",
+                font: { size: 12, family: "'Roboto Mono', monospace" },
+              },
+            },
+            y: {
+              grid: { display: false },
+              ticks: {
+                color: "#e5e7eb",
+                font: { size: 11, family: "'Roboto Mono', monospace" },
+              },
+            },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(0, 0, 0, 0.8)",
+              titleFont: { family: "'Orbitron', sans-serif", size: 14 },
+              bodyFont: { family: "'Roboto Mono', monospace", size: 12 },
+              borderColor: "#00ffff",
+              borderWidth: 1,
+              callbacks: {
+                label: (context) => `Persentase: ${context.raw.toFixed(1)}%`,
+              },
+            },
+            annotation: {
+              annotations: {
+                line1: {
+                  type: "line",
+                  xMin: rataRataNasional,
+                  xMax: rataRataNasional,
+                  borderColor: "rgb(255, 0, 255)",
+                  borderWidth: 2,
+                  borderDash: [6, 6],
+                  label: {
+                    content: `NASIONAL (${rataRataNasional}%)`,
+                    display: true,
+                    position: "end",
+                    backgroundColor: "rgba(255, 0, 255, 0.8)",
+                    color: "#ffffff",
+                    font: { family: "'Orbitron', sans-serif", weight: "bold" },
+                    yAdjust: -15,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // --- 3. FUNGSI INTERAKTIF ---
+      function updateChart(data) {
+        chart.data.labels = data.map((d) => d.provinsi);
+        chart.data.datasets[0].data = data.map((d) => d.persentase);
+        chart.update();
+      }
+
+      function setActiveButton(groupSelector, button) {
+        document
+          .querySelectorAll(groupSelector)
+          .forEach((btn) => btn.classList.remove("active"));
+        button.classList.add("active");
+      }
+
+      document.getElementById("sort-desc").addEventListener("click", (e) => {
+        currentData.sort((a, b) => b.persentase - a.persentase);
+        updateChart(currentData);
+        setActiveButton('[id^="sort-"]', e.target);
+      });
+
+      document.getElementById("sort-asc").addEventListener("click", (e) => {
+        currentData.sort((a, b) => a.persentase - b.persentase);
+        updateChart(currentData);
+        setActiveButton('[id^="sort-"]', e.target);
+      });
+
+      document.getElementById("sort-alpha").addEventListener("click", (e) => {
+        currentData.sort((a, b) => a.provinsi.localeCompare(b.provinsi));
+        updateChart(currentData);
+        setActiveButton('[id^="sort-"]', e.target);
+      });
+
+      document.querySelectorAll("[data-filter]").forEach((button) => {
+        button.addEventListener("click", (e) => {
+          const filter = e.target.getAttribute("data-filter");
+          if (filter === "Semua") {
+            currentData = [...allData];
+          } else {
+            currentData = allData.filter((d) => d.pulau === filter);
+          }
+          const activeSortButton = document.querySelector(
+            '[id^="sort-"].active'
+          );
+          if (activeSortButton) {
+            activeSortButton.click();
+          } else {
+            currentData.sort((a, b) => b.persentase - a.persentase);
+            updateChart(currentData);
+          }
+          setActiveButton("[data-filter]", e.target);
+        });
+      });
+
+      // --- 4. INISIALISASI GRAFIK ---
+      document.getElementById("sort-desc").click();
+    </script>
+  </body>
+</html>
